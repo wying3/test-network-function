@@ -91,6 +91,7 @@ proc event { event } {
 log_user 0
 catch [list log_file -noappend -a $ctrl(logfile)]
 
+send_log "running: $ctrl(argv)\r\n"
 set pid [eval spawn -noecho $ctrl(argv)]
 
 while 1 {
