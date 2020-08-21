@@ -13,7 +13,7 @@ func (expr *all) Next() bool {
     return expr.exprs.Next()
 }
 func (expr *all) Eval(executor *Executor) (int, error) {
-    for expr.exprs.Next() {
+    for expr.Next() {
         result, err := expr.exprs.Eval(executor)
         if result > SUCCESS || err != nil {
             return result, err
@@ -36,7 +36,7 @@ func (expr *any) Next() bool {
 func (expr *any) Eval(executor *Executor) (int, error) {
     var err error = nil
     result := SUCCESS
-    for expr.exprs.Next() {
+    for expr.Next() {
         result, err = expr.exprs.Eval(executor)
         if result != FAILURE || err != nil {
             break
@@ -58,7 +58,7 @@ func (expr *one) Next() bool {
 }
 func (expr *one) Eval(executor *Executor) (int, error) {
     var succeeded int
-    for expr.exprs.Next() {
+    for expr.Next() {
         result, err := expr.exprs.Eval(executor)
         if result == ERROR || err != nil {
             return result, err
