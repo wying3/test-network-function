@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json-schema.redhat.com/test-network-function/claim.json",
+    "title": "A network function test claim.",
+    "description": "TBD",
+    "$ref": "#/definitions/claim",
+    "definitions": {
+        "claim": {
+            "$id": "#claim",
+            "type": "object",
+            "properties": {
+                "foo": {
+                    "type": "string"
+                },
+                "bar": {
+                    "type": "number"
+                }
+            },
+            "additionalProperties": false,
+            "required": ["foo", "bar"]
+        }
+    }
+}
