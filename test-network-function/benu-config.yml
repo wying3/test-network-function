@@ -1,0 +1,7 @@
+trexpod: "trex-7f49459978-xz5pz"
+trexcontainer: "trex"
+bngcontrolplanepod: "benudp-649d949d4c-x8p6d"
+bngcontrolplanecontainer: "benudp"
+bnguserplanepod: "benuupc-785d4dcfd9-r2kk8"
+bnguserplanecontainer: "benuupc"
+namespace: "default"
