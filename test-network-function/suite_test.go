@@ -32,6 +32,7 @@ import (
 	"github.com/redhat-nfvpe/test-network-function/pkg/config"
 	"github.com/redhat-nfvpe/test-network-function/pkg/junit"
 	containerTestConfig "github.com/redhat-nfvpe/test-network-function/pkg/tnf/config"
+	_ "github.com/redhat-nfvpe/test-network-function/test-network-function/benu"
 	_ "github.com/redhat-nfvpe/test-network-function/test-network-function/container"
 	_ "github.com/redhat-nfvpe/test-network-function/test-network-function/generic"
 	_ "github.com/redhat-nfvpe/test-network-function/test-network-function/operator"

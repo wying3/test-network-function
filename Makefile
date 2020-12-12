@@ -41,6 +41,8 @@ operator-cnf-tests: build build-cnf-tests run-operator-tests
 
 container-cnf-tests: build build-cnf-tests run-container-tests
 
+benu-cnf-tests: build build-cnf-tests run-benu-tests
+
 .PHONY: build-cnf-tests
 build-cnf-tests:
 	PATH=${PATH}:${GOBIN} ginkgo build ./test-network-function
@@ -60,6 +62,10 @@ run-operator-tests:
 .PHONY: run-container-tests
 run-container-tests:
 	cd ./test-network-function && ./test-network-function.test -ginkgo.focus="container" ${COMMON_GINKGO_ARGS}
+
+.PHONY: run-benu-tests
+run-benu-tests:
+	cd ./test-network-function && ./test-network-function.test -ginkgo.focus="benu" ${COMMON_GINKGO_ARGS}
 
 deps-update:
 	go mod tidy && \
@@ -86,7 +92,7 @@ unit-tests:
 
 lint:
 	golint `go list ./... | grep -v vendor`
-	golangci-lint run
+	#golangci-lint run
 
 jsontest-cli:
 	go build -o jsontest-cli -v cmd/generic/main.go
