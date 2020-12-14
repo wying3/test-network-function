@@ -72,10 +72,10 @@ func TestSpawnOc(t *testing.T) {
 	for _, testCase := range ocTestCases {
 		ctrl = gomock.NewController(t)
 		mockSpawner := mock_interactive.NewMockSpawner(ctrl)
-		mockSpawner.EXPECT().Spawn(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(testCase.contextReturnValue, testCase.errReturnValue)
+		mockSpawner.EXPECT().Spawn(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(testCase.contextReturnValue, testCase.errReturnValue)
 
 		var spawner interactive.Spawner = mockSpawner
-		oc, _, err := interactive.SpawnOc(&spawner, testCase.podName, testCase.podContainerName, testCase.podNamespace, ocTestTimeoutDuration, testCase.options...)
+		oc, _, err := interactive.SpawnOc(&spawner, testCase.podName, testCase.podContainerName, testCase.podNamespace, ocTestTimeoutDuration, nil, nil, testCase.options...)
 		assert.Equal(t, testCase.expectedSpawnErr, err)
 		if testCase.expectedSpawnErr == nil {
 			assert.Equal(t, testCase.podName, oc.GetPodName())

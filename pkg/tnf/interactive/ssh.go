@@ -18,6 +18,7 @@ package interactive
 
 import (
 	"fmt"
+	"io"
 	"time"
 
 	expect "github.com/google/goexpect"
@@ -31,9 +32,9 @@ const (
 // SpawnSSH spawns an SSH session to a generic linux host using ssh provided by openssh-clients.  Takes care of
 // establishing the pseudo-terminal (PTY) through expect.SpawnGeneric().
 // TODO: This method currently relies upon passwordless SSH setup beforehand.  Handle all types of auth.
-func SpawnSSH(spawner *Spawner, user, host string, timeout time.Duration, opts ...expect.Option) (*Context, error) {
+func SpawnSSH(spawner *Spawner, user, host string, timeout time.Duration, in *io.WriteCloser, out *io.Reader, opts ...expect.Option) (*Context, error) {
 	sshArgs := getSSHString(user, host)
-	return (*spawner).Spawn(sshCommand, []string{sshArgs}, timeout, opts...)
+	return (*spawner).Spawn(sshCommand, []string{sshArgs}, timeout, in, out, opts...)
 }
 
 func getSSHString(user, host string) string {

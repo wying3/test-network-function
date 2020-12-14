@@ -7,6 +7,7 @@ import (
 	ginkgoconfig "github.com/onsi/ginkgo/config"
 	"github.com/onsi/gomega"
 	"github.com/redhat-nfvpe/test-network-function/pkg/tnf"
+	"github.com/redhat-nfvpe/test-network-function/pkg/tnf/handlers/hostname"
 	"github.com/redhat-nfvpe/test-network-function/pkg/tnf/interactive"
 	"github.com/redhat-nfvpe/test-network-function/pkg/tnf/reel"
 	"github.com/redhat-nfvpe/test-network-function/pkg/tnf/testcases"
@@ -57,14 +58,35 @@ var _ = ginkgo.Describe(testSpecName, func() {
 				//i := i
 				defer ginkgo.GinkgoRecover()
 				gomega.Expect(config).ToNot(gomega.BeNil())
-				oc := getOcSession(config.BNGUserPlanePod, config.BNGUserPlaneContainer, config.Namespace, defaultTimeout, expect.Verbose(true))
+				//oc := getOcSession(config.BNGUserPlanePod, config.BNGUserPlaneContainer, config.Namespace, defaultTimeout, true, expect.Verbose(true))
+				goExpectSpawner := interactive.NewGoExpectSpawner()
+				var ocSpawner interactive.Spawner = goExpectSpawner
+
+				oc, _, err := interactive.SpawnOc(&ocSpawner, config.BNGUserPlanePod, config.BNGUserPlaneContainer, config.Namespace, defaultTimeout, nil, nil, expect.Verbose(true))
+				gomega.Expect(err).To(gomega.BeNil())
 				gomega.Expect(oc).ToNot(gomega.BeNil())
 				gomega.Expect(oc.GetExpecter()).ToNot(gomega.BeNil())
+
+				h := hostname.NewHostname(defaultTimeout)
+				ht, _ := tnf.NewTest(oc.GetExpecter(), h, []reel.Handler{h}, oc.GetErrorChannel())
+				ht.Run()
+
+				//_, err = goExpectSpawner.GetStdinPipe().Write([]byte("/opt/benu/bin/cliexec -e 'show bef counter subscribers'\n"))
+				//gomega.Expect(err).To(gomega.BeNil())
+				in := goExpectSpawner.GetStdinPipe()
+				out := goExpectSpawner.GetStdoutPipe()
+				fmt.Printf("in=%s out=%s\n", in, out)
+				cliGoSpawner := interactive.NewGoExpectSpawner()
+				var cliSpawner interactive.Spawner = cliGoSpawner
+				context, err := SpawnCLIExec(&cliSpawner, defaultTimeout, &in, &out)
+				gomega.Expect(err).To(gomega.BeNil())
+				gomega.Expect(context).ToNot(gomega.BeNil())
+
 				var dataPlane *BenuBNG
 				dataPlane = NewBenuBNG(defaultTimeout, config.BNGUserPlanePod, config.Namespace, BenuBNGShowCounterCmd)
 				for i := 0; i <= 10; i++ {
 					time.Sleep(2 * time.Second)
-					test, err := tnf.NewTest(oc.GetExpecter(), dataPlane, []reel.Handler{dataPlane}, oc.GetErrorChannel())
+					test, err := tnf.NewTest(context.GetExpecter(), dataPlane, []reel.Handler{dataPlane}, context.GetErrorChannel())
 					gomega.Expect(err).To(gomega.BeNil())
 					gomega.Expect(test).ToNot(gomega.BeNil())
 					testResult, err := test.Run()
@@ -111,7 +133,7 @@ func validate(pkt string) (int, int) {
 }
 
 // Helper used to instantiate an OpenShift Client Session.
-func getOcSession(pod, container, namespace string, timeout time.Duration, options ...expect.Option) *interactive.Oc {
+func getOcSession(pod, container, namespace string, timeout time.Duration, cliExec bool, options ...expect.Option) *interactive.Oc {
 	// Spawn an interactive OC shell using a goroutine (needed to avoid cross expect.Expecter interaction).  Extract the
 	// Oc reference from the goroutine through a channel.  Performs basic sanity checking that the Oc session is set up
 	// correctly.
@@ -123,9 +145,10 @@ func getOcSession(pod, container, namespace string, timeout time.Duration, optio
 	var spawner interactive.Spawner = goExpectSpawner
 
 	go func(chOut <-chan error) {
-		oc, chOut, err := interactive.SpawnOc(&spawner, pod, container, namespace, timeout, options...)
+		oc, chOut, err := interactive.SpawnOc(&spawner, pod, container, namespace, timeout, nil, nil, options...)
 		gomega.Expect(chOut).ToNot(gomega.BeNil())
 		gomega.Expect(err).To(gomega.BeNil())
+
 		ocChan <- oc
 	}(chOut)
 
@@ -134,6 +157,20 @@ func getOcSession(pod, container, namespace string, timeout time.Duration, optio
 		err := <-chOut
 		gomega.Expect(err).To(gomega.BeNil())
 	}()
+
+	//for containerOc == nil { }
+	//(*containerOc.GetExpecter()).Send("hostname\n")
+	//line, lines, _ := (*containerOc.GetExpecter()).Expect(regexp.MustCompile(`.+`), timeout)
+	//fmt.Println("line=" + line)
+	//for _, l := range lines {
+	//	fmt.Println("linex=" + l)
+	//}
+
+	//if cliExec {
+	//	context, err := SpawnCLIExec(&spawner, timeout, options...)
+	//	gomega.Expect(err).To(gomega.BeNil())
+	//	gomega.Expect(context).ToNot(gomega.BeNil())
+	//}
 
 	containerOc = <-ocChan
 

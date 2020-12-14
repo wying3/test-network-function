@@ -58,7 +58,7 @@ func getOcSession(pod, container, namespace string, timeout time.Duration, optio
 	var spawner interactive.Spawner = goExpectSpawner
 
 	go func() {
-		oc, outCh, err := interactive.SpawnOc(&spawner, pod, container, namespace, timeout, options...)
+		oc, outCh, err := interactive.SpawnOc(&spawner, pod, container, namespace, timeout, nil, nil, options...)
 		gomega.Expect(outCh).ToNot(gomega.BeNil())
 		gomega.Expect(err).To(gomega.BeNil())
 		ocChan <- oc

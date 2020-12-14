@@ -61,7 +61,7 @@ var _ = ginkgo.Describe(testSpecName, func() {
 		ginkgo.When("a local shell is spawned", func() {
 			goExpectSpawner := interactive.NewGoExpectSpawner()
 			var spawner interactive.Spawner = goExpectSpawner
-			context, err = interactive.SpawnShell(&spawner, defaultTimeout, expect.Verbose(true))
+			context, err = interactive.SpawnShell(&spawner, defaultTimeout, nil, nil, expect.Verbose(true))
 			gomega.Expect(err).To(gomega.BeNil())
 			gomega.Expect(context).ToNot(gomega.BeNil())
 			gomega.Expect(context.GetExpecter()).ToNot(gomega.BeNil())

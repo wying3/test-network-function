@@ -17,6 +17,7 @@
 package interactive
 
 import (
+	"fmt"
 	"io"
 	"os/exec"
 	"time"
@@ -43,6 +44,12 @@ type SpawnFunc interface {
 	// Start consult exec.Cmd.Start.
 	Start() error
 
+	GetStdinPipe() *io.Reader
+	SetStdin(*io.Reader)
+
+	GetStdoutPipe() *io.WriteCloser
+	SetStdout(closer *io.WriteCloser)
+
 	// StdinPipe consult exec.Cmd.StdinPipe
 	StdinPipe() (io.WriteCloser, error)
 
@@ -55,15 +62,43 @@ type SpawnFunc interface {
 
 // ExecSpawnFunc is an implementation of SpawnFunc using exec.Cmd.
 type ExecSpawnFunc struct {
-	cmd *exec.Cmd
+	desiredStdinPipe  *io.Reader
+	desiredStdoutPipe *io.WriteCloser
+	cmd               *exec.Cmd
+}
+
+func (e *ExecSpawnFunc) GetStdinPipe() *io.Reader {
+	return e.desiredStdinPipe
+}
+
+func (e *ExecSpawnFunc) GetStdoutPipe() *io.WriteCloser {
+
+	return e.desiredStdoutPipe
+}
+
+func (e *ExecSpawnFunc) SetStdin(stdin *io.Reader) {
+	e.desiredStdinPipe = stdin
+}
+
+func (e *ExecSpawnFunc) SetStdout(stdout *io.WriteCloser) {
+	e.desiredStdoutPipe = stdout
 }
 
 // Command wraps exec.Cmd.Command.
 func (e *ExecSpawnFunc) Command(name string, arg ...string) *SpawnFunc {
 	cmd := exec.Command(name, arg...)
-	execSpawnFunc := &ExecSpawnFunc{cmd: cmd}
-	var spawnFunc SpawnFunc = execSpawnFunc
-	return &spawnFunc
+	if e.desiredStdinPipe != nil {
+		fmt.Println("setting up stdin from desired state")
+		cmd.Stdin = *e.desiredStdinPipe
+	}
+	if e.desiredStdoutPipe != nil {
+		fmt.Println("setting up stdout from desired state")
+		cmd.Stdout = *e.desiredStdoutPipe
+	}
+	e.cmd = cmd
+	var sf SpawnFunc
+	sf = e
+	return &sf
 }
 
 // Wait wraps exec.Cmd.Wait.
@@ -89,7 +124,7 @@ func (e *ExecSpawnFunc) StdoutPipe() (io.Reader, error) {
 // Spawner provides an interface for creating interactive sessions such as oc, ssh, or shell.
 type Spawner interface {
 	// Spawn creates the interactive session.
-	Spawn(command string, args []string, timeout time.Duration, opts ...expect.Option) (*Context, error)
+	Spawn(command string, args []string, timeout time.Duration, in *io.WriteCloser, out *io.Reader, opts ...expect.Option) (*Context, error)
 }
 
 // Context represents an interactive context.  This abstraction is meant to be overloaded, and can represent
@@ -117,6 +152,16 @@ func NewContext(expecter *expect.Expecter, errorChannel <-chan error) *Context {
 
 // GoExpectSpawner provides an implementation of a Spawner based on GoExpect.  This was abstracted for testing purposes.
 type GoExpectSpawner struct {
+	stdinPipe  io.WriteCloser
+	stdoutPipe io.Reader
+}
+
+func (g *GoExpectSpawner) GetStdinPipe() io.WriteCloser {
+	return g.stdinPipe
+}
+
+func (g *GoExpectSpawner) GetStdoutPipe() io.Reader {
+	return g.stdoutPipe
 }
 
 // NewGoExpectSpawner creates a new GoExpectSpawner.
@@ -126,15 +171,24 @@ func NewGoExpectSpawner() *GoExpectSpawner {
 
 // Spawn creates a subprocess, setting standard input and standard output appropriately.  This is the base method to
 // create any interactive PTY based process.
-func (g *GoExpectSpawner) Spawn(command string, args []string, timeout time.Duration, opts ...expect.Option) (*Context, error) {
+func (g *GoExpectSpawner) Spawn(command string, args []string, timeout time.Duration, in *io.WriteCloser, out *io.Reader, opts ...expect.Option) (*Context, error) {
 	if !UnitTestMode {
 		execSpawnFunc := &ExecSpawnFunc{}
+
 		var transitionSpawnFunc SpawnFunc = execSpawnFunc
 		spawnFunc = &transitionSpawnFunc
+	}
+	if out != nil {
+		(*spawnFunc).SetStdin(out)
+	}
+	if in != nil {
+		(*spawnFunc).SetStdout(in)
 	}
 
 	spawnFunc = (*spawnFunc).Command(command, args...)
 	stdinPipe, stdoutPipe, err := g.unpackPipes(spawnFunc)
+	g.stdinPipe = stdinPipe
+	g.stdoutPipe = stdoutPipe
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +250,8 @@ func (g *GoExpectSpawner) unpackPipes(spawnFunc *SpawnFunc) (io.WriteCloser, io.
 func (g *GoExpectSpawner) extractStdinPipe(spawnFunc *SpawnFunc) (io.WriteCloser, error) {
 	stdin, err := (*spawnFunc).StdinPipe()
 	if err != nil {
-		log.Errorf("Couldn't extract stdin for the given process: %v", err)
+		log.Infof("Couldn't extract stdin for the given process: %v", err)
+		return *(*spawnFunc).GetStdoutPipe(), nil
 	}
 	return stdin, err
 }
@@ -205,7 +260,8 @@ func (g *GoExpectSpawner) extractStdinPipe(spawnFunc *SpawnFunc) (io.WriteCloser
 func (g *GoExpectSpawner) extractStdoutPipe(spawnFunc *SpawnFunc) (io.Reader, error) {
 	stdout, err := (*spawnFunc).StdoutPipe()
 	if err != nil {
-		log.Errorf("Couldn't extract stdout for the given process: %v", err)
+		log.Infof("Couldn't extract stdout for the given process: %v", err)
+		return *(*spawnFunc).GetStdinPipe(), nil
 	}
 	return stdout, err
 }

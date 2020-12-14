@@ -17,6 +17,7 @@
 package interactive
 
 import (
+	"io"
 	"time"
 
 	expect "github.com/google/goexpect"
@@ -53,9 +54,9 @@ type Oc struct {
 }
 
 // SpawnOc creates an OpenShift Client subprocess, spawning the appropriate underlying PTY.
-func SpawnOc(spawner *Spawner, pod, container, namespace string, timeout time.Duration, opts ...expect.Option) (*Oc, <-chan error, error) {
+func SpawnOc(spawner *Spawner, pod, container, namespace string, timeout time.Duration, in *io.WriteCloser, out *io.Reader, opts ...expect.Option) (*Oc, <-chan error, error) {
 	ocArgs := []string{ocExecCommand, ocNamespaceArg, namespace, ocInteractiveArg, pod, ocContainerArg, container, ocClientCommandSeparator, ocDefaultShell}
-	context, err := (*spawner).Spawn(ocCommand, ocArgs, timeout, opts...)
+	context, err := (*spawner).Spawn(ocCommand, ocArgs, timeout, in, out, opts...)
 	if err != nil {
 		return nil, context.GetErrorChannel(), err
 	}

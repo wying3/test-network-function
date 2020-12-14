@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	BenuBNGShowCounterCmd = "/opt/benu/bin/cliexec -e 'show bef counter subscribers'"
+	BenuBNGShowCounterCmd = "show bef counter subscribers"
 	BenuBNGServerStartCmd = "'cd v2.75;./t-rex-64 -i'"
 	BENUTrafficGenCmd     = "-c trex -- python /root/v2.75/BenuQinQ.py"
 

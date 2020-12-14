@@ -45,7 +45,7 @@ func parseArgs() (*interactive.Context, string, time.Duration, error) {
 	timeoutDuration := time.Duration(*timeout) * time.Second
 	goExpectSpawner := interactive.NewGoExpectSpawner()
 	var spawner interactive.Spawner = goExpectSpawner
-	context, err := interactive.SpawnSSH(&spawner, args[0], args[1], timeoutDuration, expect.Verbose(true))
+	context, err := interactive.SpawnSSH(&spawner, args[0], args[1], timeoutDuration, nil, nil, expect.Verbose(true))
 	return context, args[2], timeoutDuration, err
 }
 

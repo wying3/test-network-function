@@ -45,7 +45,7 @@ func parseArgs() (*interactive.Oc, <-chan error, string, time.Duration, error) {
 	timeoutDuration := time.Duration(*timeout) * time.Second
 	goExpectSpawner := interactive.NewGoExpectSpawner()
 	var spawner interactive.Spawner = goExpectSpawner
-	oc, ch, err := interactive.SpawnOc(&spawner, args[0], args[1], "default", timeoutDuration, expect.Verbose(true))
+	oc, ch, err := interactive.SpawnOc(&spawner, args[0], args[1], "default", timeoutDuration, nil, nil, expect.Verbose(true))
 	return oc, ch, args[2], timeoutDuration, err
 }
 

@@ -193,7 +193,7 @@ func runSSHCmd(_ *cobra.Command, args []string) {
 	// SSH shell creation.
 	goExpectSpawner := interactive.NewGoExpectSpawner()
 	var spawnContext interactive.Spawner = goExpectSpawner
-	context, err := interactive.SpawnSSH(&spawnContext, user, host, (*tester).Timeout(), expect.Verbose(true))
+	context, err := interactive.SpawnSSH(&spawnContext, user, host, (*tester).Timeout(), nil, nil, expect.Verbose(true))
 	if err != nil {
 		fatalError("could not create the ssh expecter", err, testExpecterCreationFailedExitCode)
 	}
@@ -220,7 +220,7 @@ func runOcCmd(_ *cobra.Command, args []string) {
 	// oc shell creation.
 	goExpectSpawner := interactive.NewGoExpectSpawner()
 	var spawnContext interactive.Spawner = goExpectSpawner
-	oc, ch, err := interactive.SpawnOc(&spawnContext, pod, container, namespace, (*tester).Timeout(), expect.Verbose(true))
+	oc, ch, err := interactive.SpawnOc(&spawnContext, pod, container, namespace, (*tester).Timeout(), nil, nil, expect.Verbose(true))
 	if err != nil {
 		fatalError("could not create the oc expecter", err, testExpecterCreationFailedExitCode)
 	}
@@ -247,7 +247,7 @@ func runShellCmd(_ *cobra.Command, args []string) {
 	// Shell creation.
 	goExpectSpawner := interactive.NewGoExpectSpawner()
 	var spawnContext interactive.Spawner = goExpectSpawner
-	context, err := interactive.SpawnShell(&spawnContext, (*tester).Timeout(), expect.Verbose(true))
+	context, err := interactive.SpawnShell(&spawnContext, (*tester).Timeout(), nil, nil, expect.Verbose(true))
 	if err != nil {
 		fatalError("could not create the shell expecter", err, testExpecterCreationFailedExitCode)
 	}

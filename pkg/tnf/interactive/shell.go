@@ -17,6 +17,7 @@
 package interactive
 
 import (
+	"io"
 	"os"
 	"time"
 
@@ -29,8 +30,8 @@ const (
 
 // SpawnShell creates an interactive shell subprocess based on the value of $SHELL, spawning the appropriate underlying
 // PTY.
-func SpawnShell(spawner *Spawner, timeout time.Duration, opts ...expect.Option) (*Context, error) {
+func SpawnShell(spawner *Spawner, timeout time.Duration, in *io.WriteCloser, out *io.Reader, opts ...expect.Option) (*Context, error) {
 	shellEnv := os.Getenv(shellEnvironmentVariableKey)
 	var args []string
-	return (*spawner).Spawn(shellEnv, args, timeout, opts...)
+	return (*spawner).Spawn(shellEnv, args, timeout, in, out, opts...)
 }

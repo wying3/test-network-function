@@ -54,7 +54,7 @@ func main() {
 	pingReel, timeoutDuration := parseArgs()
 	goExpectSpawner := interactive.NewGoExpectSpawner()
 	var spawner interactive.Spawner = goExpectSpawner
-	context, err := interactive.SpawnShell(&spawner, timeoutDuration, expect.Verbose(true))
+	context, err := interactive.SpawnShell(&spawner, timeoutDuration, nil, nil, expect.Verbose(true))
 
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
