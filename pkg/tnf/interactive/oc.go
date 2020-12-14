@@ -26,7 +26,7 @@ const (
 	ocClientCommandSeparator = "--"
 	ocCommand                = "oc"
 	ocContainerArg           = "-c"
-	ocDefaultShell           = "sh"
+	ocDefaultShell           = "bash"
 	ocExecCommand            = "exec"
 	ocNamespaceArg           = "-n"
 	ocInteractiveArg         = "-it"
@@ -54,7 +54,7 @@ type Oc struct {
 
 // SpawnOc creates an OpenShift Client subprocess, spawning the appropriate underlying PTY.
 func SpawnOc(spawner *Spawner, pod, container, namespace string, timeout time.Duration, opts ...expect.Option) (*Oc, <-chan error, error) {
-	ocArgs := []string{ocExecCommand, ocNamespaceArg, namespace, ocInteractiveArg, pod, ocContainerArg, container, ocClientCommandSeparator, ocDefaultShell}
+	ocArgs := []string{ocExecCommand, ocNamespaceArg, namespace, ocInteractiveArg, pod, ocContainerArg, container, ocClientCommandSeparator, ocDefaultShell, "-il"}
 	context, err := (*spawner).Spawn(ocCommand, ocArgs, timeout, opts...)
 	if err != nil {
 		return nil, context.GetErrorChannel(), err

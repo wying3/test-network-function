@@ -1,21 +1,13 @@
-operators:
-  - name: etcdoperator.v0.9.4
-    namespace: my-etcd
-    status: Succeeded
-    autogenerate: false
-    tests:
-      - OPERATOR_STATUS
-    certifiedoperatorrequestinfo:
-      - name: amq-streams  #just a working example
-        organization: redhat-operators
 cnfs:
-  - name: ubuntu
+  - name: benuupc-98f77dfbc-6c6dc
     namespace: default
     status: Running
     tests:
       - PRIVILEGED_POD
       - PRIVILEGED_ROLE
-    certifiedcontainerrequestinfo:
-      - name: nginx-116  # working example
-        repository: rhel8
-        certificatetype: CONTAINER
+  - name: benudp-649d949d4c-stxcc 
+    namespace: default
+    status: Running
+    tests:
+      - PRIVILEGED_POD
+      - PRIVILEGED_ROLE

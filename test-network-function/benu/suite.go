@@ -29,14 +29,13 @@ var (
 	defaultTimeout           = time.Duration(defaultTimeoutSeconds) * time.Second
 	defaultTrexServerTimeout = time.Duration(defaultTrexServerTimeoutSeconds) * time.Second
 
-	trexServerContext *interactive.Context
-	subscriberContext *interactive.Context
-	dataPlaneContext  *interactive.Context
+	context *interactive.Context
 
 	trexServerCmd     = "oc exec -it %s --  bash -c 'cd v2.75 ;./t-rex-64 -i'"
 	trexSubscriberCmd = "oc exec -it %s -c trex -- python /root/v2.75/BenuQinQ.py"
-	benuDataCmd       = "oc exec -it %s -- /opt/benu/bin/cliexec -e 'show bef counter subscribers'"
-	benuRegEx         = `^[\\d]+\\s+[\\d.]+\\s+(\\d+)\\s+(\\d+)`
+	benuDataCmd       = "oc rsh  %s /opt/benu/bin/cliexec -e 'show bef counter subscribers'"
+
+	benuRegEx = `^[\\d]+\\s+[\\d.]+\\s+(\\d+)\\s+(\\d+)`
 )
 
 var _ = ginkgo.Describe(testSpecName, func() {
@@ -45,6 +44,36 @@ var _ = ginkgo.Describe(testSpecName, func() {
 		//	tickerChannel := make(chan bool)
 
 		config, _ := configuration.GetConfig()
+		ginkgo.When("a local shell is spawned", func() {
+			goExpectSpawner := interactive.NewGoExpectSpawner()
+			var spawner interactive.Spawner = goExpectSpawner
+			context, err := interactive.SpawnShell(&spawner, defaultTimeout, expect.Verbose(true))
+			ginkgo.It("should be created without error", func() {
+				gomega.Expect(err).To(gomega.BeNil())
+				gomega.Expect(context).ToNot(gomega.BeNil())
+				gomega.Expect(context.GetExpecter()).ToNot(gomega.BeNil())
+			})
+			ginkgo.It(fmt.Sprintf("Check counter %s ", config.BNGUserPlaneContainer), func() {
+				config := config
+				var upstream int = 0
+				var downstream int = 0
+				var dataPlane *BenuBNG
+				dataPlane = NewBenuBNG(defaultTimeout, config.BNGUserPlanePod, config.Namespace, fmt.Sprintf(benuDataCmd, config.BNGUserPlanePod))
+				test, err := tnf.NewTest(context.GetExpecter(), dataPlane, []reel.Handler{dataPlane}, context.GetErrorChannel())
+				gomega.Expect(err).To(gomega.BeNil())
+				gomega.Expect(test).ToNot(gomega.BeNil())
+				testResult, err := test.Run()
+				gomega.Expect(err).To(gomega.BeNil())
+				gomega.Expect(testResult).To(gomega.Equal(tnf.SUCCESS))
+				gomega.Expect(dataPlane.GetResultOut()).ShouldNot(gomega.BeEmpty())
+				u, d := validate(dataPlane.GetResultOut())
+				gomega.Expect(u).To(gomega.Equal(d))
+				gomega.Expect(u).ShouldNot(gomega.BeEquivalentTo(upstream))
+				gomega.Expect(d).ShouldNot(gomega.BeEquivalentTo(downstream))
+				upstream = u
+				downstream = d
+			})
+		})
 
 		ginkgo.When("a trex server is running and traffic is generated", func() {
 			config := config
@@ -52,30 +81,30 @@ var _ = ginkgo.Describe(testSpecName, func() {
 			//for i := 0; i <= 10; i++ {
 			ginkgo.It(fmt.Sprintf("Check counter %s ", config.BNGUserPlaneContainer), func() {
 				config := config
-				var upstream int = 0
-				var downstream int = 0
+				//var upstream int = 0
+				//var downstream int = 0
 				//i := i
-				defer ginkgo.GinkgoRecover()
+				//defer ginkgo.GinkgoRecover()
 				gomega.Expect(config).ToNot(gomega.BeNil())
 				oc := getOcSession(config.BNGUserPlanePod, config.BNGUserPlaneContainer, config.Namespace, defaultTimeout, expect.Verbose(true))
 				gomega.Expect(oc).ToNot(gomega.BeNil())
 				gomega.Expect(oc.GetExpecter()).ToNot(gomega.BeNil())
 				var dataPlane *BenuBNG
 				dataPlane = NewBenuBNG(defaultTimeout, config.BNGUserPlanePod, config.Namespace, BenuBNGShowCounterCmd)
-				for i := 0; i <= 10; i++ {
-					time.Sleep(2 * time.Second)
-					test, err := tnf.NewTest(oc.GetExpecter(), dataPlane, []reel.Handler{dataPlane}, oc.GetErrorChannel())
-					gomega.Expect(err).To(gomega.BeNil())
-					gomega.Expect(test).ToNot(gomega.BeNil())
-					testResult, err := test.Run()
-					gomega.Expect(err).To(gomega.BeNil())
-					gomega.Expect(testResult).To(gomega.Equal(tnf.SUCCESS))
-					gomega.Expect(dataPlane.GetResultOut()).ShouldNot(gomega.BeEmpty())
-					u, d := validate(dataPlane.GetResultOut())
-					gomega.Expect(u).To(gomega.Equal(d))
-					gomega.Expect(u).ShouldNot(gomega.BeEquivalentTo(upstream))
-					gomega.Expect(d).ShouldNot(gomega.BeEquivalentTo(downstream))
-				}
+				//for i := 0; i <= 10; i++ {
+				//	time.Sleep(2 * time.Second)
+				test, err := tnf.NewTest(oc.GetExpecter(), dataPlane, []reel.Handler{dataPlane}, oc.GetErrorChannel())
+				gomega.Expect(err).To(gomega.BeNil())
+				gomega.Expect(test).ToNot(gomega.BeNil())
+				testResult, err := test.Run()
+				gomega.Expect(err).To(gomega.BeNil())
+				gomega.Expect(testResult).To(gomega.Equal(tnf.SUCCESS))
+				gomega.Expect(dataPlane.GetResultOut()).ShouldNot(gomega.BeEmpty())
+				u, d := validate(dataPlane.GetResultOut())
+				gomega.Expect(u).To(gomega.Equal(d))
+				//	gomega.Expect(u).ShouldNot(gomega.BeEquivalentTo(upstream))
+				//	gomega.Expect(d).ShouldNot(gomega.BeEquivalentTo(downstream))
+				//}
 			})
 
 			//}
