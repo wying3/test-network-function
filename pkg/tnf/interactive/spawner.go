@@ -89,7 +89,7 @@ func (e *ExecSpawnFunc) StdoutPipe() (io.Reader, error) {
 // Spawner provides an interface for creating interactive sessions such as oc, ssh, or shell.
 type Spawner interface {
 	// Spawn creates the interactive session.
-	Spawn(command string, args []string, timeout time.Duration, opts ...expect.Option) (*Context, error)
+	Spawn(command string, args []string, stdinPipe *io.WriteCloser, stdoutPipe *io.Reader, timeout time.Duration, opts ...expect.Option) (*Context, error)
 }
 
 // Context represents an interactive context.  This abstraction is meant to be overloaded, and can represent
@@ -117,6 +117,8 @@ func NewContext(expecter *expect.Expecter, errorChannel <-chan error) *Context {
 
 // GoExpectSpawner provides an implementation of a Spawner based on GoExpect.  This was abstracted for testing purposes.
 type GoExpectSpawner struct {
+	stdinPipe *io.WriteCloser
+	stdoutPipe *io.Reader
 }
 
 // NewGoExpectSpawner creates a new GoExpectSpawner.
@@ -124,9 +126,19 @@ func NewGoExpectSpawner() *GoExpectSpawner {
 	return &GoExpectSpawner{}
 }
 
+// GetStdinPipe returns the input stream.
+func (g *GoExpectSpawner) GetStdinPipe() *io.WriteCloser {
+	return g.stdinPipe
+}
+
+// GetStdoutPipe returns the output stream.
+func (g *GoExpectSpawner) GetStdoutPipe() *io.Reader {
+	return g.stdoutPipe
+}
+
 // Spawn creates a subprocess, setting standard input and standard output appropriately.  This is the base method to
 // create any interactive PTY based process.
-func (g *GoExpectSpawner) Spawn(command string, args []string, timeout time.Duration, opts ...expect.Option) (*Context, error) {
+func (g *GoExpectSpawner) Spawn(command string, args []string, stdinPipe *io.WriteCloser, stdoutPipe *io.Reader, timeout time.Duration, opts ...expect.Option) (*Context, error) {
 	if !UnitTestMode {
 		execSpawnFunc := &ExecSpawnFunc{}
 		var transitionSpawnFunc SpawnFunc = execSpawnFunc
@@ -134,7 +146,10 @@ func (g *GoExpectSpawner) Spawn(command string, args []string, timeout time.Dura
 	}
 
 	spawnFunc = (*spawnFunc).Command(command, args...)
-	stdinPipe, stdoutPipe, err := g.unpackPipes(spawnFunc)
+	var err error
+	if stdinPipe == nil || stdoutPipe == nil {
+		stdinPipe, stdoutPipe, err = g.unpackPipes(spawnFunc)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +157,7 @@ func (g *GoExpectSpawner) Spawn(command string, args []string, timeout time.Dura
 	if err != nil {
 		return nil, err
 	}
-	return g.spawnGeneric(spawnFunc, stdinPipe, stdoutPipe, timeout, opts...)
+	return g.spawnGeneric(spawnFunc, *stdinPipe, *stdoutPipe, timeout, opts...)
 }
 
 // Helper method which spawns a Context.  The pseudo-terminal (PTY) as well as the underlying goroutine is set up using
@@ -180,7 +195,7 @@ func (g *GoExpectSpawner) startCommand(spawnFunc *SpawnFunc, command string, arg
 }
 
 // Helper method to unpack stdin and stdout.
-func (g *GoExpectSpawner) unpackPipes(spawnFunc *SpawnFunc) (io.WriteCloser, io.Reader, error) {
+func (g *GoExpectSpawner) unpackPipes(spawnFunc *SpawnFunc) (*io.WriteCloser, *io.Reader, error) {
 	stdinPipe, err := g.extractStdinPipe(spawnFunc)
 	if err != nil {
 		return nil, nil, err
@@ -189,7 +204,7 @@ func (g *GoExpectSpawner) unpackPipes(spawnFunc *SpawnFunc) (io.WriteCloser, io.
 	if err != nil {
 		return nil, nil, err
 	}
-	return stdinPipe, stdoutPipe, err
+	return &stdinPipe, &stdoutPipe, err
 }
 
 // Helper method to extract stdin.

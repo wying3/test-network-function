@@ -44,6 +44,7 @@ do
 		multus) FOCUS="multus|$FOCUS";;
 		operator) FOCUS="operator|$FOCUS";;
 		container) FOCUS="container|$FOCUS";;
+		io) FOCUS="io|$FOCUS";;
 		*) usage_error;;
 	esac
 done

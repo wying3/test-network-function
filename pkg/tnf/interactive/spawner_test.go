@@ -194,7 +194,7 @@ func TestGoExpectSpawner_Spawn(t *testing.T) {
 		mockSpawnFunc.EXPECT().Command(testCase.goExpectSpawnerSpawnCommand, testCase.goExpectSpawnerSpawnArgs).Return(&sFunc)
 
 		goExpectSpawner := interactive.NewGoExpectSpawner()
-		context, err := goExpectSpawner.Spawn(testCase.goExpectSpawnerSpawnCommand, testCase.goExpectSpawnerSpawnArgs, testCase.goExpectSpawnerSpawnTimeout, testCase.goExpectSpawnerSpawnOpts...)
+		context, err := goExpectSpawner.Spawn(testCase.goExpectSpawnerSpawnCommand, testCase.goExpectSpawnerSpawnArgs, nil, nil, testCase.goExpectSpawnerSpawnTimeout, testCase.goExpectSpawnerSpawnOpts...)
 		assert.Equal(t, testCase.goExpectSpawnerSpawnReturnErr, err)
 		assert.Equal(t, testCase.goExpectSpawnerSpawnReturnContextIsNil, context == nil)
 	}

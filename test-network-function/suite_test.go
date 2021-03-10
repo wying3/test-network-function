@@ -34,6 +34,7 @@ import (
 	_ "github.com/redhat-nfvpe/test-network-function/test-network-function/container"
 	"github.com/redhat-nfvpe/test-network-function/test-network-function/diagnostic"
 	_ "github.com/redhat-nfvpe/test-network-function/test-network-function/generic"
+	_ "github.com/redhat-nfvpe/test-network-function/test-network-function/nestedio"
 	_ "github.com/redhat-nfvpe/test-network-function/test-network-function/operator"
 	"github.com/redhat-nfvpe/test-network-function/test-network-function/version"
 	log "github.com/sirupsen/logrus"

@@ -60,7 +60,7 @@ func TestSpawnSsh(t *testing.T) {
 	for _, testCase := range sshTestCases {
 		ctrl = gomock.NewController(t)
 		mockSpawner := mock_interactive.NewMockSpawner(ctrl)
-		mockSpawner.EXPECT().Spawn(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(testCase.contextReturnValue, testCase.errReturnValue)
+		mockSpawner.EXPECT().Spawn(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(testCase.contextReturnValue, testCase.errReturnValue)
 
 		var spawner interactive.Spawner = mockSpawner
 		_, err := interactive.SpawnSSH(&spawner, testCase.user, testCase.host, ocTestTimeoutDuration, testCase.options...)

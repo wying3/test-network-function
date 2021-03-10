@@ -33,7 +33,7 @@ const (
 // TODO: This method currently relies upon passwordless SSH setup beforehand.  Handle all types of auth.
 func SpawnSSH(spawner *Spawner, user, host string, timeout time.Duration, opts ...expect.Option) (*Context, error) {
 	sshArgs := getSSHString(user, host)
-	return (*spawner).Spawn(sshCommand, []string{sshArgs}, timeout, opts...)
+	return (*spawner).Spawn(sshCommand, []string{sshArgs}, nil, nil, timeout, opts...)
 }
 
 func getSSHString(user, host string) string {
