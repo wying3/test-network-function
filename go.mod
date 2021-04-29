@@ -18,6 +18,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/test-network-function/test-network-function-claim v1.0.2
 	github.com/xeipuuv/gojsonschema v1.2.0
+	golang.org/x/lint v0.0.0-20201208152925-83fdc39ff7b5 // indirect
 	google.golang.org/grpc v1.36.1
 	gopkg.in/yaml.v2 v2.4.0
 	kubevirt.io/qe-tools v0.1.7
