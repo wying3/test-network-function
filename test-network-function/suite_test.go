@@ -126,7 +126,8 @@ func TestTest(t *testing.T) {
 		ginkgoReporters = append(ginkgoReporters, reporters.NewJUnitReporter(junitFile))
 	}
 
-	ginkgo.RunSpecsWithDefaultAndCustomReporters(t, CnfCertificationTestSuiteName, ginkgoReporters)
+	//ginkgo.RunSpecsWithDefaultAndCustomReporters(t, CnfCertificationTestSuiteName, ginkgoReporters)
+	ginkgo.RunSpecs(t, CnfCertificationTestSuiteName)
 	junitMap := make(map[string]interface{})
 	var extension = filepath.Ext(JunitXMLFileName)
 	reportKeyName := JunitXMLFileName[0 : len(JunitXMLFileName)-len(extension)]
