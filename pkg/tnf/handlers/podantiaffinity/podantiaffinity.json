@@ -1,0 +1,29 @@
+{
+  "identifier": {
+    "url": "http://test-network-function.com/tests/podantiaffinity",
+    "version": "v1.0.0"
+  },
+  "description": "This test checks cnf pod antiaffinity rule in cnf deployment.",
+  "testResult": 0,
+  "testTimeout": 10000000000,
+  "reelFirstStep": {
+    "execute": "oc get deployment {{.DEPLOYMENT_NAME}} -n {{.DEPLOYMENT_NAMESPACE}} -o json | jq -r ' if .spec.replicas > 1 then if .spec.template.spec.affinity.podAntiAffinity != null then \"OK\" else \"MISSING\" end else \"OK\" end '\n",
+    "expect": [
+      "(?m)OK",
+      "(?m)MISSING"
+    ],
+    "timeout": 10000000000
+  },
+  "resultContexts": [
+    {
+      "pattern": "(?m)OK",
+      "defaultResult": 1
+    },
+    {
+      "pattern": "(?m)MISSING",
+      "defaultResult": 2
+    }
+    
+ 
+  ]
+}
