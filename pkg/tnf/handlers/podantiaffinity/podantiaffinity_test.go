@@ -37,8 +37,10 @@ const (
 var (
 	genericTestSchemaFile = path.Join("schemas", "generic-test.schema.json")
 	checkSubFilename      = "podantiaffinity.json"
-	expectedFailPattern   = "(?m)MISSING"
+	expectedFailPattern1  = "(?m)PODAAFAIL"
 	expectedPassPattern   = "(?m)OK"
+	expectedFailPattern2  = "(?m)REPLICAFAIL"
+	expectedErrPattern    = "(?m).*"
 	pathRelativeToRoot    = path.Join("..", "..", "..", "..")
 	pathToTestSchemaFile  = path.Join(pathRelativeToRoot, genericTestSchemaFile)
 	testDeploymentName    = "testDeployName123"
@@ -82,10 +84,11 @@ func TestPods_ReelFirst(t *testing.T) {
 	assert.Equal(t, 1, len(handlers))
 	handler := handlers[0]
 	step := handler.ReelFirst()
-	expectedReelFirstExecute := fmt.Sprintf("oc get deployment %s -n %s -o json | jq -r ' if .spec.replicas > 1 then if .spec.template.spec.affinity.podAntiAffinity != null then \"OK\" else \"MISSING\" end else \"OK\" end '\n",
+	expectedReelFirstExecute := fmt.Sprintf(
+		"oc get deployment %s -n %s -o json | jq -r ' if .spec.replicas > 1 then if .spec.template.spec.affinity.podAntiAffinity != null then \"OK\" else \"PODAAFAIL\" end else \"REPLICAFAIL\" end '\n",
 		testDeploymentName, testNamespace)
 	assert.Equal(t, expectedReelFirstExecute, step.Execute)
-	assert.Contains(t, step.Expect, expectedPassPattern, expectedFailPattern)
+	assert.Contains(t, step.Expect, expectedPassPattern, expectedFailPattern1, expectedFailPattern2)
 	assert.Equal(t, testTimeoutDuration, step.Timeout)
 }
 
@@ -130,7 +133,15 @@ func TestPods_ReelMatch(t *testing.T) {
 	assert.Equal(t, tnf.SUCCESS, (*tester).Result())
 
 	// Negative Test
-	step = handler.ReelMatch(expectedFailPattern, "", "MISSING")
+	step = handler.ReelMatch(expectedFailPattern1, "", "PODAAFAIL")
 	assert.Nil(t, step)
 	assert.Equal(t, tnf.FAILURE, (*tester).Result())
+	// Negative Test
+	step = handler.ReelMatch(expectedFailPattern2, "", "REPLICAFAIL")
+	assert.Nil(t, step)
+	assert.Equal(t, tnf.FAILURE, (*tester).Result())
+	// ERROR
+	step = handler.ReelMatch(expectedErrPattern, "", "")
+	assert.Nil(t, step)
+	assert.Equal(t, tnf.ERROR, (*tester).Result())
 }

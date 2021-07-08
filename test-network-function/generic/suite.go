@@ -78,6 +78,7 @@ const (
 	multusTestsKey                = "multus"
 	testsKey                      = "generic"
 	drainTimeoutMinutes           = 5
+	partnerPod                    = "partner"
 )
 
 var (
@@ -286,11 +287,11 @@ var _ = ginkgo.Describe(testsKey, func() {
 				testSysctlConfigs(getContext(), containersUnderTest.oc.GetPodName(), containersUnderTest.oc.GetPodNamespace())
 			}
 		}
-
-		for _, containerUnderTest := range containersUnderTest {
-			testPodAntiAffinity(containerUnderTest.oc.GetPodNamespace())
+		if !isMinikube() {
+			for _, containerUnderTest := range containersUnderTest {
+				testPodAntiAffinity(containerUnderTest.oc.GetPodNamespace())
+			}
 		}
-
 	}
 })
 
@@ -899,22 +900,24 @@ func uncordonNode(node string) {
 // Pod antiaffinity test for all deployments
 func testPodAntiAffinity(podNamespace string) {
 	var deployments dp.DeploymentMap
-	ginkgo.When("pod replica value is set more than 1", func() {
-		ginkgo.It("Should have pod anti-affinity rule been defined in deployment", func() {
-			defer results.RecordResult(identifiers.TestPodAntiAffinityBestPractices)
+	ginkgo.When("CNF is designed in high availability mode ", func() {
+		ginkgo.It("Should set pod replica number greater than 1 and corresponding pod anti-affinity rules in deployment", func() {
+			defer results.RecordResult(identifiers.TestPodHighAvailabilityBestPractices)
 			deployments, _ = getDeployments(podNamespace)
 			if len(deployments) == 0 {
 				return
 			}
-			for name := range deployments {
-				podAntiAffinityIsPresent(name, podNamespace)
+			for name, d := range deployments {
+				if name != partnerPod {
+					podAntiAffinity(name, podNamespace, d.Replicas)
+				}
 			}
 		})
 	})
 }
 
 // check pod antiaffinity definition for a deployment
-func podAntiAffinityIsPresent(deployment, podNamespace string) {
+func podAntiAffinity(deployment, podNamespace string, replica int) {
 	context := getContext()
 	values := make(map[string]interface{})
 	values["DEPLOYMENT_NAME"] = deployment
@@ -932,13 +935,14 @@ func podAntiAffinityIsPresent(deployment, podNamespace string) {
 	gomega.Expect(tester).ToNot(gomega.BeNil())
 
 	testResult, err := tester.Run()
-	gomega.Expect(err).To(gomega.BeNil())
-	gomega.Expect(testResult).To(gomega.Equal(tnf.SUCCESS))
 	if testResult != tnf.SUCCESS {
-		msg := fmt.Sprintf("The podAntiAffinity rule is not defined , you might want to change it in deployment %s in namespace %s", deployment, podNamespace)
+		msg := fmt.Sprintf("The POD replica is found %d, and podAntiAffinity rule is not defined, you might want to change it in deployment %s in namespace %s",
+			replica, deployment, podNamespace)
 		log.Warn(msg)
 		infoWriter(msg)
 	}
+	gomega.Expect(err).To(gomega.BeNil())
+	gomega.Expect(testResult).To(gomega.Equal(tnf.SUCCESS))
 }
 func getContext() *interactive.Context {
 	context, err := interactive.SpawnShell(interactive.CreateGoExpectSpawner(), defaultTimeout, interactive.Verbose(true))

@@ -1,16 +1,18 @@
 {
   "identifier": {
-    "url": "http://test-network-function.com/tests/podantiaffinity",
+    "url": "http://test-network-function.com/tests/testPodHighAvailability",
     "version": "v1.0.0"
   },
   "description": "This test checks cnf pod antiaffinity rule in cnf deployment.",
   "testResult": 0,
   "testTimeout": 10000000000,
   "reelFirstStep": {
-    "execute": "oc get deployment {{.DEPLOYMENT_NAME}} -n {{.DEPLOYMENT_NAMESPACE}} -o json | jq -r ' if .spec.replicas > 1 then if .spec.template.spec.affinity.podAntiAffinity != null then \"OK\" else \"MISSING\" end else \"OK\" end '\n",
+    "execute": "oc get deployment {{.DEPLOYMENT_NAME}} -n {{.DEPLOYMENT_NAMESPACE}} -o json | jq -r ' if .spec.replicas > 1 then if .spec.template.spec.affinity.podAntiAffinity != null then \"OK\" else \"PODAAFAIL\" end else \"REPLICAFAIL\" end '\n",
     "expect": [
       "(?m)OK",
-      "(?m)MISSING"
+      "(?m)PODAAFAIL",
+      "(?m)REPLICAFAIL",
+      "(?m).*"
     ],
     "timeout": 10000000000
   },
@@ -20,10 +22,16 @@
       "defaultResult": 1
     },
     {
-      "pattern": "(?m)MISSING",
+      "pattern": "(?m)PODAAFAIL",
       "defaultResult": 2
-    }
-    
- 
+    },
+    {
+      "pattern": "(?m)REPLICAFAIL",
+      "defaultResult": 2
+    },
+    {
+      "pattern": "(?m).*",
+      "defaultResult": 0
+    }  
   ]
 }

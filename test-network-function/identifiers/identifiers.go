@@ -118,10 +118,10 @@ var (
 		Url:     formGenericTestURL("pod-node-selector-node-affinity-best-practices"),
 		Version: versionOne,
 	}
-	// TestPodAntiAffinityBestPractices is the test ensuring podAntiAffinity are used by a
+	// TestPodHighAvailabilityBestPractices is the test ensuring podAntiAffinity are used by a
 	// Pod when pod replica # are great than 1
-	TestPodAntiAffinityBestPractices = claim.Identifier{
-		Url:     formGenericTestURL("pod-antiaffinity-best-practices"),
+	TestPodHighAvailabilityBestPractices = claim.Identifier{
+		Url:     formGenericTestURL("pod-high-availabitiy-best-practices"),
 		Version: versionOne,
 	}
 
@@ -328,14 +328,11 @@ to why nodeSelector and/or nodeAffinity is utilized by a CNF.`,
 instantiation on any underlying Node.`),
 	},
 
-	TestPodAntiAffinityBestPractices: {
-		Identifier: TestPodAntiAffinityBestPractices,
-		Type:       informativeResult,
-		Remediation: `In most HA cases, Pod podAntiAffinity rule should be specified when replica value is set during pod instantiation. 
-		However, there are cases in which CNFs require specialized hardware specific to a particular class of Node.  As such,this test is purely informative
-		and will not prevent a CNF from being certified. However, one should have an appropriate justification as
-        to why podAntiAffinity is not utilized by a CNF.`,
-		Description: formDescription(TestPodAntiAffinityBestPractices,
+	TestPodHighAvailabilityBestPractices: {
+		Identifier:  TestPodHighAvailabilityBestPractices,
+		Type:        informativeResult,
+		Remediation: `In high availability cases, Pod podAntiAffinity rule should be specified for pod scheduling if pod replica value is set more than 1 .`,
+		Description: formDescription(TestPodHighAvailabilityBestPractices,
 			`ensures that CNF Pods specify podAntiAffinity for when replica value is set more than 1.`),
 	},
 

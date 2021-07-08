@@ -53,7 +53,7 @@ const (
 	checkSubscriptionIdentifierURL        = "http://test-network-function.com/tests/operator/check-subscription"
 	nodeDebugIdentifierURL                = "http://test-network-function.com/tests/nodedebug"
 	loggingIdentifierURL                  = "http://test-network-function.com/tests/logging"
-	podantiaffinityIdentifierURL          = "http://test-network-function.com/tests/podantiaffinity"
+	podantiaffinityIdentifierURL          = "http://test-network-function.com/tests/testPodHighAvailability"
 
 	versionOne = "v1.0.0"
 )
@@ -533,7 +533,7 @@ var Catalog = map[string]TestCatalogEntry{
 	},
 	podantiaffinityIdentifierURL: {
 		Identifier:  PodAntiAffinityIdentifier,
-		Description: "A generic test used to verify a pod's podAffinity and podAntiAffinity configuration",
+		Description: "A generic test used to check pod's replica and podAntiAffinity configuration in high availability mode",
 		Type:        Normative,
 		IntrusionSettings: IntrusionSettings{
 			ModifiesSystem:           false,
