@@ -287,11 +287,11 @@ var _ = ginkgo.Describe(testsKey, func() {
 				testSysctlConfigs(getContext(), containersUnderTest.oc.GetPodName(), containersUnderTest.oc.GetPodNamespace())
 			}
 		}
-		if !isMinikube() {
-			for _, containerUnderTest := range containersUnderTest {
-				testPodAntiAffinity(containerUnderTest.oc.GetPodNamespace())
-			}
+
+		for _, containerUnderTest := range containersUnderTest {
+			testPodAntiAffinity(containerUnderTest.oc.GetPodNamespace())
 		}
+
 	}
 })
 
