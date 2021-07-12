@@ -52,6 +52,8 @@ const (
 	uncordonNodeIdentifierURL             = "http://test-network-function.com/tests/node/uncordon"
 	checkSubscriptionIdentifierURL        = "http://test-network-function.com/tests/operator/check-subscription"
 	nodeDebugIdentifierURL                = "http://test-network-function.com/tests/nodedebug"
+	loggingIdentifierURL                  = "http://test-network-function.com/tests/logging"
+	podantiaffinityIdentifierURL          = "http://test-network-function.com/tests/testPodHighAvailability"
 
 	versionOne = "v1.0.0"
 )
@@ -516,6 +518,32 @@ var Catalog = map[string]TestCatalogEntry{
 			dependencies.EchoBinaryName,
 		},
 	},
+	loggingIdentifierURL: {
+		Identifier:  LoggingURLIdentifier,
+		Description: "A test used to check logs are redirected to stderr/stdout",
+		Type:        Normative,
+		IntrusionSettings: IntrusionSettings{
+			ModifiesSystem:           false,
+			ModificationIsPersistent: false,
+		},
+		BinaryDependencies: []string{
+			dependencies.OcBinaryName,
+			dependencies.WcBinaryName,
+		},
+	},
+	podantiaffinityIdentifierURL: {
+		Identifier:  PodAntiAffinityIdentifier,
+		Description: "A generic test used to check pod's replica and podAntiAffinity configuration in high availability mode",
+		Type:        Normative,
+		IntrusionSettings: IntrusionSettings{
+			ModifiesSystem:           false,
+			ModificationIsPersistent: false,
+		},
+		BinaryDependencies: []string{
+			dependencies.OcBinaryName,
+			// dependencies.GrepBinaryName,
+		},
+	},
 }
 
 // HostnameIdentifier is the Identifier used to represent the generic hostname test case.
@@ -713,5 +741,17 @@ var CheckSubscriptionURLIdentifier = Identifier{
 // NodeDebugIdentifier is the Identifier used to represent the generic NodeDebug test.
 var NodeDebugIdentifier = Identifier{
 	URL:             nodeDebugIdentifierURL,
+	SemanticVersion: versionOne,
+}
+
+// LoggingURLIdentifier is the Identifier used to represent a test that checks if the stdout/stderr is used
+var LoggingURLIdentifier = Identifier{
+	URL:             loggingIdentifierURL,
+	SemanticVersion: versionOne,
+}
+
+// PodAntiAffinityIdentifier is the Identifier used to represent the generic podAffinity test.
+var PodAntiAffinityIdentifier = Identifier{
+	URL:             podantiaffinityIdentifierURL,
 	SemanticVersion: versionOne,
 }
